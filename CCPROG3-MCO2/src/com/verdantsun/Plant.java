@@ -37,13 +37,6 @@ public class Plant {
         return stages.get(currentGrowth);
     }
 
-    public int getCurrentStageIndex() {
-        if (currentGrowth >= stages.size()) {
-            return stages.size() - 1;
-        }
-        return currentGrowth;
-    }
-
     public void water() {
         if (getCurrentStage().allowsWatering()) {
             this.watered = true;
