@@ -1,14 +1,8 @@
 package com.verdantsun;
+
+import com.verdantsun.stages.*;
 import java.util.*;
 
-/**
- * The {@code Game} class controls the overall flow of the Verdant Sun Farming Simulator.
- * It manages the player, field, watering system, and game progression.
- * <p>
- * The class handles player actions such as planting seeds, watering plants,
- * applying fertilizer, harvesting crops, excavating meteorites, and advancing the game day.
- * It also interacts with {@link HighScoreManager} to record player scores at the end of the game.
- */
 public class Game {
 
     private Player player;
@@ -23,12 +17,6 @@ public class Game {
 
     private Scanner scanner;
 
-    /**
-     * Initializes the game by creating the player, field, watering can,
-     * and loading game data such as plants, fertilizers, and map layout.
-     *
-     * @param playerName the name of the player starting the game
-     */
     public Game(String playerName) {
         scanner = new Scanner(System.in);
 
@@ -39,63 +27,45 @@ public class Game {
         this.highScoreManager = new HighScoreManager();
         this.excavationsToday = 0;
 
-        plantCatalog = PlantLoader.loadPlants("data/Plants.json");
-        fertilizerCatalog = FertilizerLoader.loadFertilizers("data/Fertilizers.json");
-        MapLoader.loadMap(field, "data/Map.json");
+        plantCatalog = PlantFactory.createPlants();
+        fertilizerCatalog = FertilizerFactory.createFertilizers();
 
         this.highScoreManager.loadScores();
     }
 
-    /**
-     * Starts the main game loop and repeatedly displays the main menu
-     * until the maximum number of game days is reached.
-     */
     public void startGame() {
-        while (this.currentDay <= 15) {
+        while (this.currentDay <= 20) {
             displayMainMenu();
         }
 
         endGame();
     }
 
-    /**
-     * Advances the game to the next day, updates the field state,
-     * resets daily excavation count, and grants the player daily savings.
-     * Meteorite events are triggered on specific days.
-     */
     public void nextDay() {
 
         this.currentDay++;
         this.excavationsToday = 0;
 
-        if (this.currentDay <= 15) {
+        if (this.currentDay <= 20) {
             this.player.addSavings(50);
         }
 
         this.field.nextDayUpdate();
 
-        if (this.currentDay == 8) {
+        if (this.currentDay == 15) {
             this.field.applyMeteoritePattern(this.player);
             System.out.println("A meteorite has struck the farm!");
         }
 
-        System.out.println("Day advanced.");
+        System.out.println("Day " + this.currentDay + " started.");
     }
 
-    /**
-     * Ends the game and records the player's final savings
-     * into the high score list.
-     */
     public void endGame() {
         this.highScoreManager.addScore(this.player.getName(), this.player.getSavings());
         this.highScoreManager.saveScores();
         System.out.println("Game Ended!");
     }
 
-    /**
-     * Allows the player to select a plant type and place it on one
-     * or more selected tiles if the tile conditions and player savings allow it.
-     */
     public void plantSeed() {
         ArrayList<Plant> sortedPlants = new ArrayList<>(this.plantCatalog.values());
         sortedPlants.sort(Comparator.comparing(Plant::getName));
@@ -111,8 +81,7 @@ public class Game {
                     + " - Price: " + p.getSeedPrice()
                     + "\t Yield: " + p.getYield()
                     + "\t Max Growth: "  + p.getMaxGrowth()
-                    + "\t Preferred Soil: " + capitalize(p.getPreferredSoil())
-                    + "\t Crop Price: " + p.getCropPrice());
+                    + "\t Preferred Soil: " + capitalize(p.getPreferredSoil()));
         }
 
         System.out.print("Select a Plant: ");
@@ -136,13 +105,13 @@ public class Game {
             }
 
             Tile tile = this.field.getTile(coord[0], coord[1]);
+
             Plant newPlant = new Plant(
                     template.getName(),
                     template.getSeedPrice(),
                     template.getYield(),
-                    template.getMaxGrowth(),
                     template.getPreferredSoil(),
-                    template.getCropPrice()
+                    template.cloneStages()
             );
 
             boolean planted = tile.plantSeed(newPlant);
@@ -165,10 +134,6 @@ public class Game {
         }
     }
 
-    /**
-     * Allows the player to water plants on selected tiles if
-     * the watering can still have water available.
-     */
     public void waterPlant() {
         if (this.wateringCan.isEmpty()) {
             System.out.println("Water can is empty.");
@@ -195,10 +160,6 @@ public class Game {
         }
     }
 
-    /**
-     * Allows the player to select and apply fertilizer on
-     * one or more tiles to enhance plant growth.
-     */
     public void applyFertilizer() {
 
         ArrayList<Fertilizer> sortedFertilizers = new ArrayList<>(this.fertilizerCatalog.values());
@@ -253,10 +214,6 @@ public class Game {
         }
     }
 
-    /**
-     * Removes a plant from a tile or harvests it if it is mature.
-     * Harvesting increases the player's savings.
-     */
     public void removeOrHarvestPlant() {
 
         List<int[]> tilesToAct = selectTiles("Remove/Harvest Plant");
@@ -282,11 +239,6 @@ public class Game {
         }
     }
 
-    /**
-     * Allows the player to excavate meteorite-affected tiles
-     * starting from day 8, restoring the soil type and
-     * permanently fertilizing the tile.
-     */
     public void excavateMeteorite() {
 
         if (this.currentDay < 8) {
@@ -335,9 +287,6 @@ public class Game {
         }
     }
 
-    /**
-     * Refills the watering can to its maximum level in exchange for player savings.
-     */
     public void refillWateringCan() {
 
         int refillCost = 100;
@@ -353,12 +302,6 @@ public class Game {
         System.out.println("Watering can refilled. (-100 savings)");
     }
 
-    /**
-     * Checks whether the player has enough savings to afford
-     * at least one type of seed from the plant catalog.
-     *
-     * @return {@code true} if the player can afford at least one plant seed, {@code false} otherwise
-     */
     private boolean playerCanPlant() {
         for (Plant p : this.plantCatalog.values()) {
             if (this.player.canAfford(p.getSeedPrice()))
@@ -367,10 +310,6 @@ public class Game {
         return false;
     }
 
-    /**
-     * Displays the main game menu and allows the player to
-     * choose actions such as planting, watering, harvesting, or advancing the day.
-     */
     public void displayMainMenu() {
         int option = 1;
         HashMap<Integer, Runnable> actions = new HashMap<>();
@@ -425,13 +364,7 @@ public class Game {
         }
     }
 
-    /**
-     * Allows the player to select either a single tile or multiple tiles
-     * for a specific action. Converts the user's input into tile coordinates.
-     *
-     * @param actionName the name of the action being performed (e.g., "Plant Seed", "Water Plant")
-     * @return a list of tile coordinates selected by the player
-     */
+
     private List<int[]> selectTiles(String actionName) {
         List<int[]> tiles = new ArrayList<>();
         System.out.println("\n" + actionName);
@@ -468,13 +401,6 @@ public class Game {
         return tiles;
     }
 
-    /**
-     * Prompts the user to input a valid tile coordinate between 1 and 10
-     * and converts it to a zero-based index.
-     *
-     * @param label indicates whether the coordinate is a row or column
-     * @return the validated coordinate as a zero-based index
-     */
     private int getValidCoordinate(String label) {
         while (true) {
             int value = getIntInput("Enter " + label + " (1-10): ");
@@ -485,13 +411,6 @@ public class Game {
         }
     }
 
-    /**
-     * Displays a prompt message and retrieves a valid integer
-     * input from the user.
-     *
-     * @param message the prompt message displayed to the user
-     * @return the validated integer input from the user
-     */
     private int getIntInput(String message) {
         while (true) {
             System.out.print(message);
@@ -505,13 +424,6 @@ public class Game {
         }
     }
 
-    /**
-     * Converts the first letter of a string to uppercase and
-     * the remaining letters to lowercase.
-     *
-     * @param text the string to be formatted
-     * @return the formatted string with proper capitalization
-     */
     private String capitalize(String text) {
         if (text == null || text.isEmpty()) {
             return text;
@@ -519,15 +431,6 @@ public class Game {
         return text.substring(0, 1).toUpperCase() + text.substring(1).toLowerCase();
     }
 
-    /**
-     * Determines a unique letter to represent a plant or fertilizer option in the menu.
-     * The method scans the name of the item and selects the first unused letter.
-     * If all letters are used, it assigns the next available letter in the alphabet.
-     *
-     * @param name the name of the item
-     * @param used a set containing letters already used
-     * @return a unique character used as the menu shortcut
-     */
     private char getUniqueLetter(String name, Set<Character> used) {
         name = name.toUpperCase();
         for (char c : name.toCharArray()) {
