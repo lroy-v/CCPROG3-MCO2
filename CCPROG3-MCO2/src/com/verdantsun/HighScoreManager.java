@@ -25,7 +25,7 @@ public class HighScoreManager {
             String content = json.toString().trim();
             if (content.isEmpty() || content.equals("{}")) return;
 
-            content = content.substring(1, content.length() - 1); // remove { }
+            content = content.substring(1, content.length() - 1);
             String[] entries = content.split("},");
             for (int i = 0; i < entries.length; i++) {
                 if (!entries[i].endsWith("}")) entries[i] += "}";
@@ -55,7 +55,7 @@ public class HighScoreManager {
     public void saveScores() {
         try {
             File folder = new File("data");
-            if (!folder.exists()) folder.mkdirs(); // create folder if missing
+            if (!folder.exists()) folder.mkdirs();
 
             BufferedWriter writer = new BufferedWriter(new FileWriter("data/HighScores.json"));
             writer.write("{");
