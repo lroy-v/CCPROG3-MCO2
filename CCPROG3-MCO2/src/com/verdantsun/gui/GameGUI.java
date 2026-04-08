@@ -77,7 +77,7 @@ public class GameGUI extends JFrame {
     // ═══════════════════════════════════════════════════════════════════════
 
     private void buildUI() {
-        setTitle("🌿 Verdant Sun Farming Simulator");
+        setTitle("Verdant Sun Farming Simulator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1050, 860));
         getContentPane().setBackground(BG_DARK);
@@ -231,9 +231,7 @@ public class GameGUI extends JFrame {
         actionPanel.repaint();
     }
 
-    /** Shows action buttons, Next Day, and legend in a single centered row. */
     private void buildNormalActionPanel() {
-        // All buttons in one horizontal row
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
         btnRow.setOpaque(false);
         btnRow.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -559,7 +557,7 @@ public class GameGUI extends JFrame {
 
     private void executeExcavate() {
         for (int[] coord : selectedTiles) {
-            if (excavationsToday >= 5) { log("⛏ Daily limit reached."); break; }
+            if (excavationsToday >= 5) { log("Daily limit reached."); break; }
             if (!player.canAfford(500)) { log("Not enough savings."); break; }
             Tile tile = field.getTile(coord[0], coord[1]);
             if (!tile.isMeteoriteAffected()) { log("No meteorite at (" + (coord[0]+1) + "," + (coord[1]+1) + ")"); continue; }
@@ -595,7 +593,7 @@ public class GameGUI extends JFrame {
             field.applyMeteoritePattern(player);
             log("☄ A METEORITE has struck the farm!");
             JOptionPane.showMessageDialog(this,
-                    "☄ A meteorite has struck the farm!\nSome tiles are now meteorite-affected.\nYou can excavate them from Day 15 onwards.",
+                    "A meteorite has struck the farm!\nSome tiles are now meteorite-affected.\nYou can excavate them from Day 15 onwards.",
                     "Meteorite Event!", JOptionPane.WARNING_MESSAGE);
         }
 
