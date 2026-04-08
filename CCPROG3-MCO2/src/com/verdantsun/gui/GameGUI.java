@@ -12,7 +12,6 @@ import java.util.List;
 
 public class GameGUI extends JFrame {
 
-    // ── Core game objects ────────────────────────────────────────────────────
     private Player player;
     private Field field;
     private WateringCan wateringCan;
@@ -22,7 +21,6 @@ public class GameGUI extends JFrame {
     private HashMap<String, Plant> plantCatalog;
     private HashMap<String, Fertilizer> fertilizerCatalog;
 
-    // ── UI Panels ────────────────────────────────────────────────────────────
     private FieldPanel fieldPanel;
     private JLabel dayLabel;
     private JLabel savingsLabel;
@@ -31,7 +29,6 @@ public class GameGUI extends JFrame {
     private JPanel actionPanel;
     private JPanel infoPanel;
 
-    // ── Colours & fonts ──────────────────────────────────────────────────────
     static final Color BG_DARK      = new Color(18, 28, 18);
     static final Color BG_PANEL     = new Color(28, 42, 28);
     static final Color BG_HEADER    = new Color(20, 55, 20);
@@ -49,13 +46,11 @@ public class GameGUI extends JFrame {
     static final Font FONT_BTN    = new Font("Segoe UI", Font.BOLD, 12);
     static final Font FONT_SMALL  = new Font("Segoe UI", Font.PLAIN, 11);
 
-    // ── Action mode state ─────────────────────────────────────────────────────
     private String pendingAction = null;
     private Plant  pendingPlant  = null;
     private Fertilizer pendingFertilizer = null;
     private List<int[]> selectedTiles = new ArrayList<>();
 
-    // ─────────────────────────────────────────────────────────────────────────
     public GameGUI(String playerName) {
         player             = new Player(playerName);
         field              = new Field();
@@ -72,10 +67,6 @@ public class GameGUI extends JFrame {
         refreshAll();
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //  UI CONSTRUCTION
-    // ═══════════════════════════════════════════════════════════════════════
-
     private void buildUI() {
         setTitle("Verdant Sun Farming Simulator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -83,10 +74,8 @@ public class GameGUI extends JFrame {
         getContentPane().setBackground(BG_DARK);
         setLayout(new BorderLayout(0, 0));
 
-        // ── Header ─────────────────────────────────────────────────────────
         add(buildHeader(), BorderLayout.NORTH);
 
-        // ── Center: field (center) + tile info (right) ─────────────────────
         JPanel center = new JPanel(new BorderLayout(8, 0));
         center.setOpaque(false);
         center.setBorder(new EmptyBorder(8, 10, 4, 10));
@@ -97,7 +86,6 @@ public class GameGUI extends JFrame {
         fieldWrapper.add(fieldPanel);
         center.add(fieldWrapper, BorderLayout.CENTER);
 
-        // Tile info panel on the right
         infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setBackground(BG_PANEL);
@@ -115,7 +103,6 @@ public class GameGUI extends JFrame {
 
         add(center, BorderLayout.CENTER);
 
-        // ── South: action buttons (centered) + activity log ────────────────
         JPanel southArea = new JPanel(new BorderLayout(0, 6));
         southArea.setOpaque(false);
         southArea.setBorder(new EmptyBorder(0, 10, 10, 10));
@@ -127,7 +114,6 @@ public class GameGUI extends JFrame {
                 new LineBorder(BORDER_COLOR, 1, true),
                 new EmptyBorder(10, 16, 10, 16)));
 
-        // Wrap actionPanel so it only takes its preferred width (centered)
         JPanel actionWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         actionWrapper.setOpaque(false);
         actionWrapper.add(actionPanel);
@@ -220,10 +206,8 @@ public class GameGUI extends JFrame {
         actionPanel.removeAll();
 
         if (pendingAction != null) {
-            // ── SELECTION MODE ─────────────────────────────────────────────
             buildSelectionModePanel();
         } else {
-            // ── NORMAL MODE ────────────────────────────────────────────────
             buildNormalActionPanel();
         }
 
@@ -253,7 +237,6 @@ public class GameGUI extends JFrame {
             btnRow.add(makeActionBtn("Excavate Meteorite", ACCENT_RED, e -> startExcavateAction()));
         }
 
-        // Next Day — visually distinct
         JButton nextDay = new JButton("Next Day ->");
         nextDay.setFont(new Font("Segoe UI", Font.BOLD, 13));
         nextDay.setBackground(new Color(50, 120, 50));
@@ -268,7 +251,6 @@ public class GameGUI extends JFrame {
 
         actionPanel.add(btnRow);
 
-        // Legend strip below buttons
         actionPanel.add(Box.createVerticalStrut(6));
         JPanel legendRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
         legendRow.setOpaque(false);
@@ -285,13 +267,11 @@ public class GameGUI extends JFrame {
         actionPanel.add(legendRow);
     }
 
-    /** Shows status + tile count + Confirm + Cancel when an action is in progress. */
     private void buildSelectionModePanel() {
         JPanel row = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
         row.setOpaque(false);
         row.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Status label
         String actionLabel = switch (pendingAction) {
             case "plant"     -> "Planting: " + (pendingPlant != null ? pendingPlant.getName() : "");
             case "water"     -> "Watering plants";
@@ -367,7 +347,6 @@ public class GameGUI extends JFrame {
         addInfoRow(infoPanel, "Soil:", capitalize(tile.getSoilType()));
         addInfoRow(infoPanel, "Meteorite:", tile.isMeteoriteAffected() ? "Yes" : "No");
 
-        // Meteorite tiles count as permanently fertilized per spec
         boolean permFert = tile.isPermanentlyFertilized() || tile.isMeteoriteAffected();
         addInfoRow(infoPanel, "Perm. Fertilized:", permFert ? "Yes" : "No");
 
@@ -448,17 +427,16 @@ public class GameGUI extends JFrame {
                 selectedTiles.remove(i);
                 fieldPanel.setSelectedTiles(selectedTiles);
                 fieldPanel.repaint();
-                rebuildActionPanel(); // update tile count label
+                rebuildActionPanel();
                 return;
             }
         }
         selectedTiles.add(new int[]{row, col});
         fieldPanel.setSelectedTiles(selectedTiles);
         fieldPanel.repaint();
-        rebuildActionPanel(); // update tile count label
+        rebuildActionPanel();
     }
 
-    /** Executes the pending action on all selected tiles then resets state. */
     void confirmAction() {
         if (pendingAction == null || selectedTiles.isEmpty()) {
             cancelAction();
@@ -733,8 +711,6 @@ public class GameGUI extends JFrame {
         if (s == null || s.isEmpty()) return s;
         return s.substring(0,1).toUpperCase() + s.substring(1).toLowerCase();
     }
-
-    // ── Widget factories ──────────────────────────────────────────────────
 
     private JLabel makeStatLabel(String text, Color color) {
         JLabel lbl = new JLabel(text);
