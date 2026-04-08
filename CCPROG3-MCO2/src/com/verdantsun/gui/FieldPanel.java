@@ -133,7 +133,7 @@ public class FieldPanel extends JPanel {
         if (tile.isMeteoriteAffected()) {
             bg = METEORITE;
         } else if (tile.isPermanentlyFertilized()) {
-            bg = PERM_FERT;
+            bg = soilColor(tile.getSoilType());
         } else {
             bg = soilColor(tile.getSoilType());
         }
