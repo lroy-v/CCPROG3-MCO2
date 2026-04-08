@@ -24,9 +24,6 @@ public class WelcomeDialog extends JDialog {
         banner.setBorder(new MatteBorder(0, 0, 2, 0, GameGUI.BORDER_COLOR));
         banner.setPreferredSize(new Dimension(420, 130));
 
-        JLabel icon = new JLabel("🌿", SwingConstants.CENTER);
-        icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 48));
-
         JLabel titleLbl = new JLabel("VERDANT SUN", SwingConstants.CENTER);
         titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 26));
         titleLbl.setForeground(GameGUI.ACCENT_GREEN);
@@ -44,7 +41,6 @@ public class WelcomeDialog extends JDialog {
 
         GridBagConstraints gc = new GridBagConstraints();
         gc.insets = new Insets(0, 10, 0, 10);
-        gc.gridx = 0; banner.add(icon, gc);
         gc.gridx = 1; banner.add(textStack, gc);
         root.add(banner, BorderLayout.NORTH);
 
