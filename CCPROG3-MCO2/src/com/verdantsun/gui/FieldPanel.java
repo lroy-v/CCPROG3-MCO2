@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public class FieldPanel extends JPanel {
 
-    private static final int CELL = 54;
+    private static final int CELL = 54;   // pixel size of each cell
     private static final int MARGIN_TOP  = 28;
     private static final int MARGIN_LEFT = 28;
 
@@ -21,12 +21,14 @@ public class FieldPanel extends JPanel {
     private boolean highlightMode = false;
     private List<int[]> selectedTiles = new ArrayList<>();
 
+    // ── Soil colours ─────────────────────────────────────────────────────
     private static final Color SOIL_LOAM    = new Color(101, 79, 51);
     private static final Color SOIL_SAND    = new Color(194, 178, 112);
     private static final Color SOIL_GRAVEL  = new Color(100, 100, 100);
     private static final Color METEORITE    = new Color(60, 20, 20);
     private static final Color PERM_FERT    = new Color(40, 80, 40);
 
+    // ── Stage colours ─────────────────────────────────────────────────────
     private static final Color STAGE_SEED   = new Color(100, 200, 100, 200);
     private static final Color STAGE_DORM   = new Color(80, 120, 200, 200);
     private static final Color STAGE_ENRG   = new Color(160, 80, 200, 200);
@@ -34,6 +36,7 @@ public class FieldPanel extends JPanel {
     private static final Color STAGE_HIGHP  = new Color(220, 70, 70, 200);
     private static final Color STAGE_FULL   = new Color(20, 20, 20, 230);
 
+    // ── Plant symbol colours ──────────────────────────────────────────────
     private static final Color PLT_POTATO   = new Color(230, 170, 60);
     private static final Color PLT_THYME    = new Color(80, 200, 90);
     private static final Color PLT_TOMATO   = new Color(230, 80, 60);
@@ -58,6 +61,7 @@ public class FieldPanel extends JPanel {
                 int row = (e.getY() - MARGIN_TOP)  / CELL;
                 if (row >= 0 && row < 10 && col >= 0 && col < 10) {
                     if (SwingUtilities.isRightMouseButton(e)) {
+                        // Right-click confirms action
                         gui.confirmAction();
                     } else {
                         gui.onTileClicked(row, col);
@@ -77,6 +81,7 @@ public class FieldPanel extends JPanel {
         repaint();
     }
 
+    // ─────────────────────────────────────────────────────────────────────
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -93,6 +98,7 @@ public class FieldPanel extends JPanel {
             }
         }
 
+        // Confirm button if in selection mode and tiles selected
         if (highlightMode && !selectedTiles.isEmpty()) {
             drawConfirmHint(g2);
         }
@@ -122,6 +128,7 @@ public class FieldPanel extends JPanel {
 
         Tile tile = field.getTile(row, col);
 
+        // ── Background fill ──────────────────────────────────────────────
         Color bg;
         if (tile.isMeteoriteAffected()) {
             bg = METEORITE;
@@ -133,22 +140,26 @@ public class FieldPanel extends JPanel {
         g2.setColor(bg);
         g2.fillRect(x, y, CELL - 1, CELL - 1);
 
+        // ── Stage colour strip on top edge ───────────────────────────────
         if (tile.hasPlant()) {
             Color sc = stageColor(tile.getPlant().getCurrentStage());
             g2.setColor(sc);
             g2.fillRect(x, y, CELL - 1, 6);
         }
 
+        // ── Fertilizer indicator dot ─────────────────────────────────────
         if (tile.getFertilizer() != null && !tile.isPermanentlyFertilized()) {
             g2.setColor(new Color(180, 220, 80, 200));
             g2.fillOval(x + CELL - 12, y + 2, 8, 8);
         }
 
+        // ── Watered indicator ────────────────────────────────────────────
         if (tile.hasPlant() && tile.getPlant().isWatered()) {
             g2.setColor(new Color(80, 160, 230, 180));
             g2.fillOval(x + 2, y + 2, 8, 8);
         }
 
+        // ── Content symbol ───────────────────────────────────────────────
         if (tile.isMeteoriteAffected()) {
             drawCenteredText(g2, "M", x, y, GameGUI.ACCENT_RED,
                     new Font("Courier New", Font.BOLD, 22));
@@ -158,6 +169,7 @@ public class FieldPanel extends JPanel {
             drawCenteredText(g2, String.valueOf(p.getSymbol()), x, y, plantColor,
                     new Font("Courier New", Font.BOLD, 22));
 
+            // Mini growth bar at bottom
             drawGrowthBar(g2, x, y, p);
         } else {
             String soilSym = soilSymbol(tile.getSoilType());
@@ -165,6 +177,7 @@ public class FieldPanel extends JPanel {
                     new Font("Courier New", Font.PLAIN, 14));
         }
 
+        // ── Selection highlight ──────────────────────────────────────────
         if (isSelected(row, col)) {
             g2.setColor(new Color(255, 255, 80, 80));
             g2.fillRect(x, y, CELL - 1, CELL - 1);
@@ -173,10 +186,12 @@ public class FieldPanel extends JPanel {
             g2.drawRect(x + 1, y + 1, CELL - 3, CELL - 3);
             g2.setStroke(new BasicStroke(1));
         } else if (highlightMode) {
+            // Subtle hover-ready tint
             g2.setColor(new Color(255, 255, 255, 12));
             g2.fillRect(x, y, CELL - 1, CELL - 1);
         }
 
+        // ── Cell border ──────────────────────────────────────────────────
         g2.setColor(new Color(0, 0, 0, 80));
         g2.drawRect(x, y, CELL - 1, CELL - 1);
     }
@@ -224,6 +239,8 @@ public class FieldPanel extends JPanel {
         g2.setColor(color);
         g2.drawString(text, tx, ty);
     }
+
+    // ── Helpers ──────────────────────────────────────────────────────────
 
     private boolean isSelected(int row, int col) {
         for (int[] t : selectedTiles)

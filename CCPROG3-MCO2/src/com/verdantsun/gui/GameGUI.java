@@ -542,7 +542,7 @@ public class GameGUI extends JFrame {
             player.deductSavings(500);
             tile.excavate();
             excavationsToday++;
-            log("⛏ Excavated (" + (coord[0]+1) + "," + (coord[1]+1) + ") — soil restored, permanently fertilized.");
+            log("Excavated (" + (coord[0]+1) + "," + (coord[1]+1) + ") — soil restored, permanently fertilized.");
         }
     }
 
@@ -550,7 +550,7 @@ public class GameGUI extends JFrame {
         if (!player.canAfford(100)) { log("Not enough savings to refill."); return; }
         player.deductSavings(100);
         wateringCan.refill();
-        log("🪣 Watering can refilled! (-100g)");
+        log("Watering can refilled! (-100g)");
         refreshAll();
     }
 
