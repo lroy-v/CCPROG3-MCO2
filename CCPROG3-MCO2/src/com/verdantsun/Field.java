@@ -76,13 +76,13 @@ public class Field {
                     player.addSavings(harvestValue);
 
                     System.out.println(
-                                    plant.getName() +
+                            plant.getName() +
                                     " at (" + (row + 1) + "," + (col + 1) + ") was harvested by the meteorite! + " +
                                     harvestValue + " savings."
                     );
                 } else {
                     System.out.println(
-                                    plant.getName() +
+                            plant.getName() +
                                     " at (" + (row + 1) + "," + (col + 1) + ") was destroyed by the meteorite."
                     );
                     tile.removePlant();

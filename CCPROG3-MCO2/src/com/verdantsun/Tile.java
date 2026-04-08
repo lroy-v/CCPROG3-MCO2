@@ -38,15 +38,15 @@ public class Tile {
     }
 
     public int harvestPlant() {
-       if (this.plant == null) {
-           return 0;
-       }
+        if (this.plant == null) {
+            return 0;
+        }
 
-       int value = this.plant.harvest();
+        int value = this.plant.harvest();
 
-       this.plant = null;
+        this.plant = null;
 
-       return value;
+        return value;
     }
 
     public boolean waterPlant() {

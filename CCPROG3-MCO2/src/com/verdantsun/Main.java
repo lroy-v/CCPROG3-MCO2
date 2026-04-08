@@ -1,15 +1,28 @@
 package com.verdantsun;
-import java.util.*;
+
+import com.verdantsun.gui.GameGUI;
+import com.verdantsun.gui.WelcomeDialog;
+
+import javax.swing.*;
 
 public class Main {
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        try {
+            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+        } catch (Exception ignored) {}
 
-        System.out.print("Enter your name: ");
-        String name = scanner.nextLine();
+        SwingUtilities.invokeLater(() -> {
+            WelcomeDialog welcome = new WelcomeDialog();
+            welcome.setVisible(true);
 
-        Game game = new Game(name);
-        game.startGame();
+            String playerName = welcome.getPlayerName();
+            if (playerName == null || playerName.isBlank()) {
+                System.exit(0);
+            }
+
+            GameGUI game = new GameGUI(playerName);
+            game.setVisible(true);
+        });
     }
 }

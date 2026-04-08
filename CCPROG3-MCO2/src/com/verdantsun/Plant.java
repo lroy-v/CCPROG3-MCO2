@@ -57,7 +57,7 @@ public class Plant {
 
         int growth = baseGrowth + stage.getGrowthBonus(soilMatch, fertilized);
 
-       this.currentGrowth += growth;
+        this.currentGrowth += growth;
 
         if (this.currentGrowth >= this.stages.size()) {
             this.currentGrowth = this.stages.size() - 1;

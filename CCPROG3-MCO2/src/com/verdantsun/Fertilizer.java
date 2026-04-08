@@ -1,7 +1,7 @@
 package com.verdantsun;
 
 public class Fertilizer {
-    
+
     private String name;
     private int price;
     private int effectDays;
