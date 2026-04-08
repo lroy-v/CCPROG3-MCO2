@@ -12,6 +12,7 @@ import java.util.List;
 
 public class GameGUI extends JFrame {
 
+    // ── Core game objects ────────────────────────────────────────────────────
     private Player player;
     private Field field;
     private WateringCan wateringCan;
@@ -21,6 +22,7 @@ public class GameGUI extends JFrame {
     private HashMap<String, Plant> plantCatalog;
     private HashMap<String, Fertilizer> fertilizerCatalog;
 
+    // ── UI Panels ────────────────────────────────────────────────────────────
     private FieldPanel fieldPanel;
     private JLabel dayLabel;
     private JLabel savingsLabel;
@@ -29,6 +31,7 @@ public class GameGUI extends JFrame {
     private JPanel actionPanel;
     private JPanel infoPanel;
 
+    // ── Colours & fonts ──────────────────────────────────────────────────────
     static final Color BG_DARK      = new Color(18, 28, 18);
     static final Color BG_PANEL     = new Color(28, 42, 28);
     static final Color BG_HEADER    = new Color(20, 55, 20);
@@ -46,11 +49,13 @@ public class GameGUI extends JFrame {
     static final Font FONT_BTN    = new Font("Segoe UI", Font.BOLD, 12);
     static final Font FONT_SMALL  = new Font("Segoe UI", Font.PLAIN, 11);
 
-    private String pendingAction = null;   // "plant","water","fertilize","harvest","excavate"
+    // ── Action mode state ─────────────────────────────────────────────────────
+    private String pendingAction = null;
     private Plant  pendingPlant  = null;
     private Fertilizer pendingFertilizer = null;
     private List<int[]> selectedTiles = new ArrayList<>();
 
+    // ─────────────────────────────────────────────────────────────────────────
     public GameGUI(String playerName) {
         player             = new Player(playerName);
         field              = new Field();
@@ -67,36 +72,32 @@ public class GameGUI extends JFrame {
         refreshAll();
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    //  UI CONSTRUCTION
+    // ═══════════════════════════════════════════════════════════════════════
+
     private void buildUI() {
         setTitle("🌿 Verdant Sun Farming Simulator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(1100, 760));
+        setMinimumSize(new Dimension(1050, 860));
         getContentPane().setBackground(BG_DARK);
-        setLayout(new BorderLayout(8, 8));
+        setLayout(new BorderLayout(0, 0));
 
+        // ── Header ─────────────────────────────────────────────────────────
         add(buildHeader(), BorderLayout.NORTH);
 
-        JPanel center = new JPanel(new BorderLayout(8, 8));
+        // ── Center: field (center) + tile info (right) ─────────────────────
+        JPanel center = new JPanel(new BorderLayout(8, 0));
         center.setOpaque(false);
-        center.setBorder(new EmptyBorder(0, 10, 0, 0));
+        center.setBorder(new EmptyBorder(8, 10, 4, 10));
 
         fieldPanel = new FieldPanel(field, this);
-        center.add(fieldPanel, BorderLayout.CENTER);
-        center.add(buildLogPanel(), BorderLayout.SOUTH);
-        add(center, BorderLayout.CENTER);
+        JPanel fieldWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        fieldWrapper.setOpaque(false);
+        fieldWrapper.add(fieldPanel);
+        center.add(fieldWrapper, BorderLayout.CENTER);
 
-        JPanel right = new JPanel(new BorderLayout(0, 8));
-        right.setOpaque(false);
-        right.setBorder(new EmptyBorder(0, 0, 0, 10));
-        right.setPreferredSize(new Dimension(260, 0));
-
-        actionPanel = new JPanel();
-        actionPanel.setLayout(new BoxLayout(actionPanel, BoxLayout.Y_AXIS));
-        actionPanel.setBackground(BG_PANEL);
-        actionPanel.setBorder(new CompoundBorder(
-                new LineBorder(BORDER_COLOR, 1, true),
-                new EmptyBorder(10, 10, 10, 10)));
-
+        // Tile info panel on the right
         infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setBackground(BG_PANEL);
@@ -104,22 +105,36 @@ public class GameGUI extends JFrame {
                 new LineBorder(BORDER_COLOR, 1, true),
                 new EmptyBorder(10, 10, 10, 10)));
 
-        JScrollPane actionScroll = new JScrollPane(actionPanel,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        actionScroll.getViewport().setBackground(BG_PANEL);
-        actionScroll.setBorder(null);
-        actionScroll.setPreferredSize(new Dimension(260, 380));
-
         JScrollPane infoScroll = new JScrollPane(infoPanel,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         infoScroll.getViewport().setBackground(BG_PANEL);
         infoScroll.setBorder(null);
+        infoScroll.setPreferredSize(new Dimension(210, 0));
+        center.add(infoScroll, BorderLayout.EAST);
 
-        right.add(actionScroll, BorderLayout.NORTH);
-        right.add(infoScroll, BorderLayout.CENTER);
-        add(right, BorderLayout.EAST);
+        add(center, BorderLayout.CENTER);
+
+        // ── South: action buttons (centered) + activity log ────────────────
+        JPanel southArea = new JPanel(new BorderLayout(0, 6));
+        southArea.setOpaque(false);
+        southArea.setBorder(new EmptyBorder(0, 10, 10, 10));
+
+        actionPanel = new JPanel();
+        actionPanel.setLayout(new BoxLayout(actionPanel, BoxLayout.Y_AXIS));
+        actionPanel.setBackground(BG_PANEL);
+        actionPanel.setBorder(new CompoundBorder(
+                new LineBorder(BORDER_COLOR, 1, true),
+                new EmptyBorder(10, 16, 10, 16)));
+
+        // Wrap actionPanel so it only takes its preferred width (centered)
+        JPanel actionWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        actionWrapper.setOpaque(false);
+        actionWrapper.add(actionPanel);
+        southArea.add(actionWrapper, BorderLayout.NORTH);
+
+        southArea.add(buildLogPanel(), BorderLayout.CENTER);
+        add(southArea, BorderLayout.SOUTH);
 
         pack();
         setLocationRelativeTo(null);
@@ -135,33 +150,27 @@ public class GameGUI extends JFrame {
         GridBagConstraints gc = new GridBagConstraints();
         gc.insets = new Insets(0, 12, 0, 12);
 
-        // Title
         gc.gridx = 0; gc.gridy = 0; gc.anchor = GridBagConstraints.WEST; gc.weightx = 0;
         JLabel title = new JLabel("VERDANT SUN");
         title.setFont(new Font("Segoe UI", Font.BOLD, 20));
         title.setForeground(ACCENT_GREEN);
         header.add(title, gc);
 
-        // Day
         gc.gridx = 1;
         dayLabel = makeStatLabel("Day 1 / 20", ACCENT_GOLD);
         header.add(dayLabel, gc);
 
-        // Savings
         gc.gridx = 2;
-        savingsLabel = makeStatLabel("1000", ACCENT_GREEN);
+        savingsLabel = makeStatLabel("Savings: 1000", ACCENT_GREEN);
         header.add(savingsLabel, gc);
 
-        // Water
         gc.gridx = 3;
-        waterLabel = makeStatLabel("10/10", ACCENT_BLUE);
+        waterLabel = makeStatLabel("Watering Can: 10/10", ACCENT_BLUE);
         header.add(waterLabel, gc);
 
-        // Spacer
         gc.gridx = 4; gc.weightx = 1;
         header.add(Box.createHorizontalGlue(), gc);
 
-        // High scores btn
         gc.gridx = 5; gc.weightx = 0;
         JButton hsBtn = makeSmallButton("High Scores", ACCENT_GOLD);
         hsBtn.addActionListener(e -> showHighScores());
@@ -176,7 +185,7 @@ public class GameGUI extends JFrame {
         p.setBorder(new CompoundBorder(
                 new LineBorder(BORDER_COLOR, 1, true),
                 new EmptyBorder(6, 8, 6, 8)));
-        p.setPreferredSize(new Dimension(0, 130));
+        p.setPreferredSize(new Dimension(0, 110));
 
         JLabel lbl = new JLabel("Activity Log");
         lbl.setFont(FONT_TITLE);
@@ -199,9 +208,9 @@ public class GameGUI extends JFrame {
     }
 
     void refreshAll() {
-        dayLabel.setText("Day" + currentDay + " / 20");
-        savingsLabel.setText(" " + player.getSavings());
-        waterLabel.setText("" + wateringCan.getCurrentWaterLevel() + "/10");
+        dayLabel.setText("Day " + currentDay + " / 20");
+        savingsLabel.setText("Savings: " + player.getSavings());
+        waterLabel.setText("Watering Can: " + wateringCan.getCurrentWaterLevel() + "/10");
         fieldPanel.repaint();
         rebuildActionPanel();
         rebuildInfoPanel();
@@ -210,131 +219,143 @@ public class GameGUI extends JFrame {
     private void rebuildActionPanel() {
         actionPanel.removeAll();
 
-        addSectionLabel(actionPanel, "ACTIONS");
+        if (pendingAction != null) {
+            // ── SELECTION MODE ─────────────────────────────────────────────
+            buildSelectionModePanel();
+        } else {
+            // ── NORMAL MODE ────────────────────────────────────────────────
+            buildNormalActionPanel();
+        }
 
-        // Plant seed
+        actionPanel.revalidate();
+        actionPanel.repaint();
+    }
+
+    /** Shows action buttons, Next Day, and legend in a single centered row. */
+    private void buildNormalActionPanel() {
+        // All buttons in one horizontal row
+        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
+        btnRow.setOpaque(false);
+        btnRow.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         if (playerCanPlant()) {
-            addActionButton(actionPanel, "Plant Seed", ACCENT_GREEN, e -> startPlantAction());
+            btnRow.add(makeActionBtn("Plant Seed", ACCENT_GREEN, e -> startPlantAction()));
         }
-
-        // Water
         if (field.hasWaterablePlants() && !wateringCan.isEmpty()) {
-            addActionButton(actionPanel, "Water Plant", ACCENT_BLUE, e -> startWaterAction());
+            btnRow.add(makeActionBtn("Water Plant", ACCENT_BLUE, e -> startWaterAction()));
         }
-
-        // Refill
         if (player.canAfford(100)) {
-            addActionButton(actionPanel, "Refill Can (100g)", ACCENT_BLUE, e -> refillCan());
+            btnRow.add(makeActionBtn("Refill Can (100g)", ACCENT_BLUE, e -> refillCan()));
         }
-
-        // Fertilize
-        addActionButton(actionPanel, "Apply Fertilizer", new Color(180, 120, 220), e -> startFertilizeAction());
-
-        // Harvest/Remove
+        btnRow.add(makeActionBtn("Apply Fertilizer", new Color(180, 120, 220), e -> startFertilizeAction()));
         if (field.hasAnyPlant()) {
-            addActionButton(actionPanel, "Harvest / Remove", ACCENT_GOLD, e -> startHarvestAction());
+            btnRow.add(makeActionBtn("Harvest / Remove", ACCENT_GOLD, e -> startHarvestAction()));
         }
-
-        // Excavate
         if (currentDay >= 8 && field.hasMeteoriteTiles() && excavationsToday < 5) {
-            addActionButton(actionPanel, "Excavate Meteorite", ACCENT_RED, e -> startExcavateAction());
+            btnRow.add(makeActionBtn("Excavate Meteorite", ACCENT_RED, e -> startExcavateAction()));
         }
 
-        actionPanel.add(Box.createVerticalStrut(10));
-
-        // Next Day – prominent
-        JButton nextDay = new JButton("Next Day -> ");
-        nextDay.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        // Next Day — visually distinct
+        JButton nextDay = new JButton("Next Day ->");
+        nextDay.setFont(new Font("Segoe UI", Font.BOLD, 13));
         nextDay.setBackground(new Color(50, 120, 50));
         nextDay.setForeground(Color.WHITE);
         nextDay.setFocusPainted(false);
         nextDay.setBorderPainted(false);
         nextDay.setOpaque(true);
-        nextDay.setAlignmentX(Component.CENTER_ALIGNMENT);
-        nextDay.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
         nextDay.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        nextDay.setBorder(new EmptyBorder(7, 18, 7, 18));
         nextDay.addActionListener(e -> doNextDay());
-        actionPanel.add(nextDay);
+        btnRow.add(nextDay);
 
-        // Confirm + Cancel (shown when action pending)
-        if (pendingAction != null) {
-            actionPanel.add(Box.createVerticalStrut(8));
+        actionPanel.add(btnRow);
 
-            // Status label
-            JLabel statusLbl = new JLabel("Mode: " + pendingAction.toUpperCase());
-            statusLbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
-            statusLbl.setForeground(ACCENT_GOLD);
-            statusLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
-            actionPanel.add(statusLbl);
+        // Legend strip below buttons
+        actionPanel.add(Box.createVerticalStrut(6));
+        JPanel legendRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
+        legendRow.setOpaque(false);
+        legendRow.setAlignmentX(Component.CENTER_ALIGNMENT);
+        addLegendChip(legendRow, "l", "Loam", new Color(139, 115, 85));
+        addLegendChip(legendRow, "s", "Sand", new Color(210, 195, 130));
+        addLegendChip(legendRow, "g", "Gravel", new Color(120, 120, 120));
+        addLegendChip(legendRow, "M", "Meteorite", ACCENT_RED);
+        addLegendChip(legendRow, "P", "Potato", new Color(210, 160, 60));
+        addLegendChip(legendRow, "T", "Thyme", new Color(80, 190, 90));
+        addLegendChip(legendRow, "O", "Tomato", new Color(220, 80, 60));
+        addLegendChip(legendRow, "U", "Turnip", new Color(160, 90, 180));
+        addLegendChip(legendRow, "W", "Wheat", new Color(200, 170, 60));
+        actionPanel.add(legendRow);
+    }
 
-            JLabel countLbl = new JLabel(selectedTiles.size() + " tile(s) selected");
-            countLbl.setFont(FONT_SMALL);
-            countLbl.setForeground(TEXT_DIM);
-            countLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
-            actionPanel.add(countLbl);
+    /** Shows status + tile count + Confirm + Cancel when an action is in progress. */
+    private void buildSelectionModePanel() {
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
+        row.setOpaque(false);
+        row.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            actionPanel.add(Box.createVerticalStrut(6));
+        // Status label
+        String actionLabel = switch (pendingAction) {
+            case "plant"     -> "Planting: " + (pendingPlant != null ? pendingPlant.getName() : "");
+            case "water"     -> "Watering plants";
+            case "fertilize" -> "Fertilizing: " + (pendingFertilizer != null ? pendingFertilizer.getName() : "");
+            case "harvest"   -> "Harvest / Remove";
+            case "excavate"  -> "Excavating meteorite tiles";
+            default          -> pendingAction;
+        };
 
-            JButton confirm = new JButton("✔ Confirm Selection");
-            confirm.setFont(FONT_BTN);
-            confirm.setBackground(new Color(40, 100, 40));
-            confirm.setForeground(Color.WHITE);
-            confirm.setFocusPainted(false);
-            confirm.setBorderPainted(false);
-            confirm.setOpaque(true);
-            confirm.setAlignmentX(Component.LEFT_ALIGNMENT);
-            confirm.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
-            confirm.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            confirm.setEnabled(!selectedTiles.isEmpty());
-            confirm.addActionListener(e -> confirmAction());
-            actionPanel.add(confirm);
+        JLabel statusLbl = new JLabel(actionLabel);
+        statusLbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        statusLbl.setForeground(ACCENT_GOLD);
+        row.add(statusLbl);
 
-            actionPanel.add(Box.createVerticalStrut(4));
+        JLabel sep = new JLabel("  |  ");
+        sep.setForeground(TEXT_DIM);
+        row.add(sep);
 
-            JButton cancel = new JButton("✖ Cancel");
-            cancel.setFont(FONT_BTN);
-            cancel.setBackground(new Color(100, 30, 30));
-            cancel.setForeground(Color.WHITE);
-            cancel.setFocusPainted(false);
-            cancel.setBorderPainted(false);
-            cancel.setOpaque(true);
-            cancel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            cancel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
-            cancel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            cancel.addActionListener(e -> cancelAction());
-            actionPanel.add(cancel);
-        }
+        JLabel countLbl = new JLabel(selectedTiles.size() + " tile(s) selected");
+        countLbl.setFont(FONT_BODY);
+        countLbl.setForeground(TEXT_DIM);
+        row.add(countLbl);
 
-        // Legend
-        actionPanel.add(Box.createVerticalStrut(14));
-        addSectionLabel(actionPanel, "LEGEND");
-        addLegendRow(actionPanel, "l", "Loam soil", new Color(139, 115, 85));
-        addLegendRow(actionPanel, "s", "Sand soil", new Color(210, 195, 130));
-        addLegendRow(actionPanel, "g", "Gravel soil", new Color(120, 120, 120));
-        addLegendRow(actionPanel, "M", "Meteorite tile", ACCENT_RED);
-        addLegendRow(actionPanel, "P", "Potato", new Color(210, 160, 60));
-        addLegendRow(actionPanel, "T", "Thyme", new Color(80, 190, 90));
-        addLegendRow(actionPanel, "O", "Tomato", new Color(220, 80, 60));
-        addLegendRow(actionPanel, "U", "Turnip", new Color(160, 90, 180));
-        addLegendRow(actionPanel, "W", "Wheat", new Color(200, 170, 60));
+        JButton confirm = new JButton("Confirm");
+        confirm.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        confirm.setBackground(new Color(40, 110, 40));
+        confirm.setForeground(Color.WHITE);
+        confirm.setFocusPainted(false);
+        confirm.setBorderPainted(false);
+        confirm.setOpaque(true);
+        confirm.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        confirm.setBorder(new EmptyBorder(6, 16, 6, 16));
+        confirm.setEnabled(!selectedTiles.isEmpty());
+        confirm.addActionListener(e -> confirmAction());
+        row.add(confirm);
 
-        actionPanel.revalidate();
-        actionPanel.repaint();
+        JButton cancel = new JButton("Cancel");
+        cancel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        cancel.setBackground(new Color(110, 30, 30));
+        cancel.setForeground(Color.WHITE);
+        cancel.setFocusPainted(false);
+        cancel.setBorderPainted(false);
+        cancel.setOpaque(true);
+        cancel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cancel.setBorder(new EmptyBorder(6, 16, 6, 16));
+        cancel.addActionListener(e -> cancelAction());
+        row.add(cancel);
+
+        actionPanel.add(row);
     }
 
     private void rebuildInfoPanel() {
         infoPanel.removeAll();
         addSectionLabel(infoPanel, "TILE INFO");
         addInfoHint(infoPanel, "Click a tile to see\ndetailed plant info.");
-
         infoPanel.revalidate();
         infoPanel.repaint();
     }
 
-    /** Called by FieldPanel when player clicks a tile. */
     void onTileClicked(int row, int col) {
         if (pendingAction != null) {
-            handlePendingActionOnTile(row, col);
+            toggleTileSelection(row, col);
         } else {
             showTileInfo(row, col);
         }
@@ -347,9 +368,12 @@ public class GameGUI extends JFrame {
 
         addInfoRow(infoPanel, "Soil:", capitalize(tile.getSoilType()));
         addInfoRow(infoPanel, "Meteorite:", tile.isMeteoriteAffected() ? "Yes" : "No");
-        addInfoRow(infoPanel, "Perm. Fertilized:", tile.isPermanentlyFertilized() ? "Yes" : "No");
 
-        if (tile.getFertilizer() != null && !tile.isPermanentlyFertilized()) {
+        // Meteorite tiles count as permanently fertilized per spec
+        boolean permFert = tile.isPermanentlyFertilized() || tile.isMeteoriteAffected();
+        addInfoRow(infoPanel, "Perm. Fertilized:", permFert ? "Yes" : "No");
+
+        if (tile.getFertilizer() != null && !tile.isPermanentlyFertilized() && !tile.isMeteoriteAffected()) {
             Fertilizer f = tile.getFertilizer();
             addInfoRow(infoPanel, "Fertilizer:", f.getName());
             addInfoRow(infoPanel, "Effect days:", f.getEffectDays() + "/" + f.getMaxEffectDays());
@@ -364,16 +388,14 @@ public class GameGUI extends JFrame {
             addInfoRow(infoPanel, "Growth:", p.getCurrentGrowth() + "/" + p.getMaxGrowth());
             addInfoRow(infoPanel, "Watered:", p.isWatered() ? "Yes" : "No");
             addInfoRow(infoPanel, "Pref. Soil:", capitalize(p.getPreferredSoil()));
-            addInfoRow(infoPanel, "On Pref. Soil:", p.isInPreferredSoil(tile.getSoilType()) ? "✅ Yes" : "❌ No");
+            addInfoRow(infoPanel, "On Pref. Soil:", p.isInPreferredSoil(tile.getSoilType()) ? "Yes" : "No");
 
             String cropName = p.getCropName();
             if (cropName != null) {
                 addInfoRow(infoPanel, "Crop:", cropName);
                 addInfoRow(infoPanel, "Price:", p.getCropPricePerPiece() + "g each");
             }
-
-            boolean canH = p.getCurrentStage().canHarvest();
-            addInfoRow(infoPanel, "Can harvest:", canH ? "Yes" : "No");
+            addInfoRow(infoPanel, "Can harvest:", p.getCurrentStage().canHarvest() ? "Yes" : "No");
         }
 
         infoPanel.revalidate();
@@ -386,15 +408,15 @@ public class GameGUI extends JFrame {
         pendingPlant  = chosen;
         pendingAction = "plant";
         fieldPanel.setHighlightMode(true);
-        log("Click tiles to plant " + chosen.getName() + ". Then press Confirm or Cancel.");
-        showConfirmBar("Planting: " + chosen.getName());
+        log("Click tiles to plant " + chosen.getName() + ". Press Confirm when done.");
+        rebuildActionPanel();
     }
 
     private void startWaterAction() {
         pendingAction = "water";
         fieldPanel.setHighlightMode(true);
-        log("Click tiles to water. Confirm when done.");
-        showConfirmBar("Watering plants");
+        log("Click tiles to water. Press Confirm when done.");
+        rebuildActionPanel();
     }
 
     private void startFertilizeAction() {
@@ -403,52 +425,47 @@ public class GameGUI extends JFrame {
         pendingFertilizer = chosen;
         pendingAction     = "fertilize";
         fieldPanel.setHighlightMode(true);
-        log("Click tiles to fertilize with " + chosen.getName() + ". Confirm when done.");
-        showConfirmBar("Fertilizing: " + chosen.getName());
+        log("Click tiles to fertilize with " + chosen.getName() + ". Press Confirm when done.");
+        rebuildActionPanel();
     }
 
     private void startHarvestAction() {
         pendingAction = "harvest";
         fieldPanel.setHighlightMode(true);
-        log("Click tiles to harvest/remove. Confirm when done.");
-        showConfirmBar("Harvest / Remove plants");
+        log("Click tiles to harvest/remove. Press Confirm when done.");
+        rebuildActionPanel();
     }
 
     private void startExcavateAction() {
         if (excavationsToday >= 5) { log("Daily excavation limit reached."); return; }
         pendingAction = "excavate";
         fieldPanel.setHighlightMode(true);
-        log("Click meteorite tiles to excavate (500g each). Confirm when done.");
-        showConfirmBar("Excavating meteorite tiles");
+        log("Click meteorite tiles to excavate (500g each). Press Confirm when done.");
+        rebuildActionPanel();
     }
 
-    private void handlePendingActionOnTile(int row, int col) {
-        int[] coord = {row, col};
-        // Toggle selection
+    private void toggleTileSelection(int row, int col) {
         for (int i = 0; i < selectedTiles.size(); i++) {
             if (selectedTiles.get(i)[0] == row && selectedTiles.get(i)[1] == col) {
                 selectedTiles.remove(i);
                 fieldPanel.setSelectedTiles(selectedTiles);
                 fieldPanel.repaint();
+                rebuildActionPanel(); // update tile count label
                 return;
             }
         }
-        selectedTiles.add(coord);
+        selectedTiles.add(new int[]{row, col});
         fieldPanel.setSelectedTiles(selectedTiles);
         fieldPanel.repaint();
+        rebuildActionPanel(); // update tile count label
     }
 
-    private void showConfirmBar(String desc) {
-        // Add confirm button dynamically in action panel
-        rebuildActionPanel();
-    }
-
+    /** Executes the pending action on all selected tiles then resets state. */
     void confirmAction() {
         if (pendingAction == null || selectedTiles.isEmpty()) {
             cancelAction();
             return;
         }
-
         switch (pendingAction) {
             case "plant"     -> executePlant();
             case "water"     -> executeWater();
@@ -456,7 +473,6 @@ public class GameGUI extends JFrame {
             case "harvest"   -> executeHarvest();
             case "excavate"  -> executeExcavate();
         }
-
         cancelAction();
     }
 
@@ -502,7 +518,7 @@ public class GameGUI extends JFrame {
                 wateringCan.water();
                 log("Watered (" + (coord[0]+1) + "," + (coord[1]+1) + ")");
             } else {
-                log("X Cannot water (" + (coord[0]+1) + "," + (coord[1]+1) + ")");
+                log("Cannot water (" + (coord[0]+1) + "," + (coord[1]+1) + ")");
             }
         }
     }
@@ -521,7 +537,7 @@ public class GameGUI extends JFrame {
                 player.deductSavings(pendingFertilizer.getPrice());
                 log("Fertilized (" + (coord[0]+1) + "," + (coord[1]+1) + ")");
             } else {
-                log("X Cannot fertilize (" + (coord[0]+1) + "," + (coord[1]+1) + ")");
+                log("Cannot fertilize (" + (coord[0]+1) + "," + (coord[1]+1) + ")");
             }
         }
     }
@@ -529,7 +545,7 @@ public class GameGUI extends JFrame {
     private void executeHarvest() {
         for (int[] coord : selectedTiles) {
             Tile tile = field.getTile(coord[0], coord[1]);
-            if (!tile.hasPlant()) { log("X No plant at (" + (coord[0]+1) + "," + (coord[1]+1) + ")"); continue; }
+            if (!tile.hasPlant()) { log("No plant at (" + (coord[0]+1) + "," + (coord[1]+1) + ")"); continue; }
             int earned = tile.harvestPlant();
             if (earned > 0) {
                 player.addSavings(earned);
@@ -546,7 +562,7 @@ public class GameGUI extends JFrame {
             if (excavationsToday >= 5) { log("⛏ Daily limit reached."); break; }
             if (!player.canAfford(500)) { log("Not enough savings."); break; }
             Tile tile = field.getTile(coord[0], coord[1]);
-            if (!tile.isMeteoriteAffected()) { log("X No meteorite at (" + (coord[0]+1) + "," + (coord[1]+1) + ")"); continue; }
+            if (!tile.isMeteoriteAffected()) { log("No meteorite at (" + (coord[0]+1) + "," + (coord[1]+1) + ")"); continue; }
             player.deductSavings(500);
             tile.excavate();
             excavationsToday++;
@@ -558,7 +574,7 @@ public class GameGUI extends JFrame {
         if (!player.canAfford(100)) { log("Not enough savings to refill."); return; }
         player.deductSavings(100);
         wateringCan.refill();
-        log("Watering can refilled! (-100g)");
+        log("🪣 Watering can refilled! (-100g)");
         refreshAll();
     }
 
@@ -577,7 +593,7 @@ public class GameGUI extends JFrame {
 
         if (currentDay == 15) {
             field.applyMeteoritePattern(player);
-            log("A METEORITE has struck the farm! Tiles affected.");
+            log("☄ A METEORITE has struck the farm!");
             JOptionPane.showMessageDialog(this,
                     "☄ A meteorite has struck the farm!\nSome tiles are now meteorite-affected.\nYou can excavate them from Day 15 onwards.",
                     "Meteorite Event!", JOptionPane.WARNING_MESSAGE);
@@ -598,30 +614,26 @@ public class GameGUI extends JFrame {
         List<JRadioButton> buttons = new ArrayList<>();
 
         for (Plant p : sorted) {
-            String label = "<html><b>" + p.getName() + "</b>  <span style='color:gray'>" +
-                    p.getSeedPrice() + "g</span>  |  Yield: " + p.getYield() +
-                    "  |  Max Growth: " + p.getMaxGrowth() +
-                    "  |  Soil: " + capitalize(p.getPreferredSoil()) + "</html>";
+            String label = "<html><b>" + p.getName() + "</b>  <span style='color:gray'>"
+                    + p.getSeedPrice() + "g</span>  |  Yield: " + p.getYield()
+                    + "  |  Max Growth: " + p.getMaxGrowth()
+                    + "  |  Soil: " + capitalize(p.getPreferredSoil()) + "</html>";
             JRadioButton rb = new JRadioButton(label);
             rb.setBackground(BG_PANEL);
             rb.setForeground(TEXT_MAIN);
             rb.setFont(FONT_BODY);
             rb.setBorder(new EmptyBorder(4, 6, 4, 6));
-            boolean affordable = player.canAfford(p.getSeedPrice());
-            rb.setEnabled(affordable);
+            rb.setEnabled(player.canAfford(p.getSeedPrice()));
             group.add(rb);
             buttons.add(rb);
             panel.add(rb);
         }
 
         int result = JOptionPane.showConfirmDialog(this, panel,
-                "Select a Plant to Plant", JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE);
+                "Select a Plant to Plant", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result != JOptionPane.OK_OPTION) return null;
-
-        for (int i = 0; i < buttons.size(); i++) {
+        for (int i = 0; i < buttons.size(); i++)
             if (buttons.get(i).isSelected()) return sorted.get(i);
-        }
         return null;
     }
 
@@ -637,8 +649,8 @@ public class GameGUI extends JFrame {
         List<JRadioButton> buttons = new ArrayList<>();
 
         for (Fertilizer f : sorted) {
-            String label = "<html><b>" + f.getName() + "</b>  <span style='color:gray'>" +
-                    f.getPrice() + "g</span>  |  Effect Days: " + f.getEffectDays() + "</html>";
+            String label = "<html><b>" + f.getName() + "</b>  <span style='color:gray'>"
+                    + f.getPrice() + "g</span>  |  Effect Days: " + f.getEffectDays() + "</html>";
             JRadioButton rb = new JRadioButton(label);
             rb.setBackground(BG_PANEL);
             rb.setForeground(TEXT_MAIN);
@@ -651,29 +663,22 @@ public class GameGUI extends JFrame {
         }
 
         int result = JOptionPane.showConfirmDialog(this, panel,
-                "Select a Fertilizer", JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE);
+                "Select a Fertilizer", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result != JOptionPane.OK_OPTION) return null;
-
-        for (int i = 0; i < buttons.size(); i++) {
+        for (int i = 0; i < buttons.size(); i++)
             if (buttons.get(i).isSelected()) return sorted.get(i);
-        }
         return null;
     }
 
     private void showHighScores() {
-        HighScoreManager temp = new HighScoreManager();
-        temp.loadScores();
-
         JPanel panel = new JPanel(new BorderLayout(0, 8));
         panel.setBackground(BG_DARK);
         panel.setBorder(new EmptyBorder(12, 12, 12, 12));
 
-        String[] cols = {"Rank", "Name", "Savings"};
-        // We can't directly read the list from HighScoreManager, so display current player inline
-        JTextArea area = new JTextArea("High Score data stored in data/HighScores.json\n" +
-                "Final scores are recorded when the game ends.\n\n" +
-                "Current savings: " + player.getSavings() + "g");
+        JTextArea area = new JTextArea(
+                "High Score data stored in data/HighScores.json\n" +
+                        "Final scores are recorded when the game ends.\n\n" +
+                        "Current savings: " + player.getSavings() + "g");
         area.setEditable(false);
         area.setFont(FONT_MONO);
         area.setBackground(BG_PANEL);
@@ -746,10 +751,25 @@ public class GameGUI extends JFrame {
         btn.setForeground(fg);
         btn.setBackground(BG_PANEL);
         btn.setFocusPainted(false);
-        btn.setBorderPainted(true);
         btn.setBorder(new LineBorder(fg, 1, true));
         btn.setOpaque(true);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    private JButton makeActionBtn(String text, Color color, ActionListener al) {
+        JButton btn = new JButton(text);
+        btn.setFont(FONT_BTN);
+        btn.setForeground(color);
+        btn.setBackground(BG_DARK);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(true);
+        btn.setBorder(new CompoundBorder(
+                new LineBorder(color.darker(), 1, true),
+                new EmptyBorder(6, 10, 6, 10)));
+        btn.setOpaque(true);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.addActionListener(al);
         return btn;
     }
 
@@ -762,42 +782,11 @@ public class GameGUI extends JFrame {
         panel.add(lbl);
     }
 
-    private void addActionButton(JPanel panel, String text, Color color, ActionListener al) {
-        JButton btn = new JButton(text);
-        btn.setFont(FONT_BTN);
-        btn.setForeground(color);
-        btn.setBackground(BG_DARK);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(true);
-        btn.setBorder(new CompoundBorder(
-                new LineBorder(color.darker(), 1, true),
-                new EmptyBorder(4, 8, 4, 8)));
-        btn.setOpaque(true);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
-        btn.addActionListener(al);
-        panel.add(btn);
-        panel.add(Box.createVerticalStrut(4));
-    }
-
-    private void addLegendRow(JPanel panel, String symbol, String desc, Color color) {
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
-        row.setOpaque(false);
-        row.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel sym = new JLabel(symbol);
-        sym.setFont(new Font("Courier New", Font.BOLD, 13));
-        sym.setForeground(color);
-        sym.setPreferredSize(new Dimension(16, 18));
-
-        JLabel dsc = new JLabel(desc);
-        dsc.setFont(FONT_SMALL);
-        dsc.setForeground(TEXT_DIM);
-
-        row.add(sym);
-        row.add(dsc);
-        panel.add(row);
+    private void addLegendChip(JPanel panel, String symbol, String desc, Color color) {
+        JLabel chip = new JLabel(symbol + " " + desc);
+        chip.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        chip.setForeground(color);
+        panel.add(chip);
     }
 
     private void addInfoRow(JPanel panel, String key, String value) {
@@ -813,8 +802,7 @@ public class GameGUI extends JFrame {
         v.setFont(FONT_SMALL);
         v.setForeground(TEXT_MAIN);
 
-        row.add(k);
-        row.add(v);
+        row.add(k); row.add(v);
         panel.add(row);
     }
 
